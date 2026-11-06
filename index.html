@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Generating Board Games with MCTS and LLM Agents</title>
+<meta name="description" content="Companion page for the AIIDE 2026 paper: an agentic LLM pipeline that writes board games as Python code, tests them with MCTS self-play and refines them from the metrics.">
+<meta property="og:title" content="Generating Board Games with MCTS and LLM Agents">
+<meta property="og:description" content="From a plain-text game idea to a playable, tested board game. Paper, poster, results and playable games (AIIDE 2026).">
+<meta property="og:type" content="website">
+<meta name="color-scheme" content="light">
+<style>
+@font-face{font-family:'Space Grotesk';font-weight:400;font-display:swap;src:url(fonts/space-grotesk-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-weight:500;font-display:swap;src:url(fonts/space-grotesk-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Space Grotesk';font-weight:700;font-display:swap;src:url(fonts/space-grotesk-latin-700-normal.woff2) format('woff2')}
+:root{--navy:#0B2545;--teal:#0B7A75;--ink:#14202E;--gray:#4A5B6D;--bg:#F6F8FB;--panel:#E3EEF7;--line:#D5E0EB;--orange:#B45309;--purple:#6D4AA8;--max:1040px}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:'Space Grotesk',system-ui,-apple-system,'Segoe UI',sans-serif;font-size:17px;line-height:1.55}
+a{color:var(--teal)}
+.wrap{max-width:var(--max);margin:0 auto;padding:0 20px}
+header.hero{padding:44px 0 30px;border-bottom:3px solid var(--teal)}
+.kicker{font-size:13px;font-weight:700;letter-spacing:.06em;color:var(--teal);text-transform:uppercase;margin:0 0 10px}
+h1{font-size:clamp(30px,5.2vw,52px);line-height:1.1;margin:0 0 14px;color:var(--navy);letter-spacing:-.01em}
+.authors{font-size:19px;font-weight:700;color:var(--navy);margin:0}
+.affil{margin:4px 0 0;color:var(--gray);font-size:15px}
+.buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:24px}
+.btn{display:inline-block;padding:11px 18px;border-radius:10px;font-weight:700;text-decoration:none;font-size:16px;border:2px solid var(--teal);color:var(--teal);background:#fff}
+.btn.primary{background:var(--teal);color:#fff}
+.btn:hover{filter:brightness(.95)}
+.btn[aria-disabled=true]{opacity:.55;pointer-events:none}
+.note-small{font-size:13px;color:var(--gray);margin:10px 0 0}
+section{padding:40px 0;border-bottom:1px solid var(--line)}
+h2{font-size:clamp(24px,3.4vw,32px);color:var(--navy);margin:0 0 6px}
+.lead{font-size:clamp(20px,2.6vw,25px);line-height:1.35;font-weight:500;color:var(--navy);margin:0 0 14px}
+.sub{color:var(--gray);margin:0 0 20px;max-width:760px}
+.steps{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0 0}
+.pill{background:var(--panel);border-radius:999px;padding:7px 15px;font-weight:500;font-size:15px}
+.pill b{color:var(--teal);font-size:12px;letter-spacing:.05em;margin-right:6px}
+.arrow{color:var(--teal);font-weight:700}
+figure{margin:22px 0 0;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px}
+figure img{display:block;width:100%;height:auto}
+figcaption{font-size:14px;color:var(--gray);margin-top:10px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:26px;align-items:start}
+.cols>*{min-width:0}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+table.fit{border-collapse:separate;border-spacing:3px;width:100%;font-size:15px}
+table.fit th{font-weight:500;text-align:left;padding:2px 4px;white-space:nowrap}
+table.fit thead th{font-size:12px;color:var(--gray);text-align:center;white-space:normal;line-height:1.2}
+table.fit td{padding:0;text-align:center}
+.cell{display:block;border-radius:6px;padding:6px 0;font-weight:700;font-size:14.5px}
+.tw{overflow-x:auto}
+@media(max-width:520px){table.fit{font-size:13px;border-spacing:2px}table.fit th{padding:2px 2px}.cell{font-size:12.5px}.card{padding:12px}.bar-row{grid-template-columns:96px 1fr}.bar-name{font-size:12.5px}}
+.fn{font-size:13px;color:var(--gray);margin:10px 0 0}
+.bar-row{display:grid;grid-template-columns:128px 1fr;gap:8px;align-items:center;margin:0 0 12px}
+.bar-name{font-size:14px;font-weight:500;text-align:right}
+.bar-tracks{display:flex;flex-direction:column;gap:3px}
+.bar{height:16px;border-radius:3px;position:relative;min-width:4px}
+.bar i{position:absolute;left:calc(100% + 6px);top:-1px;font-style:normal;font-size:12px;line-height:18px;color:var(--ink);white-space:nowrap}
+.bar.draft{background:#B9C7D4}.bar.best{background:var(--teal);height:20px}
+.bar.best i{font-weight:700;line-height:22px}
+.legend{display:flex;gap:16px;font-size:13px;color:var(--gray);margin-top:6px}
+.legend span::before{content:"";display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:6px;background:var(--c)}
+.curves{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:16px}
+@media(max-width:640px){.curves{grid-template-columns:1fr}}
+.curves figure{margin:0;padding:10px}
+.curves h3{font-size:14px;margin:0 0 4px;color:var(--navy)}
+.key{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;margin-top:12px;color:var(--gray)}
+.key span::before{content:"";display:inline-block;width:14px;height:3px;margin:0 6px 3px 0;background:var(--c)}
+.msgs{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px}
+@media(max-width:820px){.msgs{grid-template-columns:1fr}}
+.msg{background:var(--panel);border-radius:12px;padding:14px 16px;font-size:16px}
+.msg b{display:block;color:var(--navy);margin-bottom:2px}
+.games{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-top:20px}
+@media(max-width:700px){.games{grid-template-columns:1fr}}
+.game{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:6px}
+.game .tag{font-size:12px;font-weight:700;letter-spacing:.06em;color:var(--teal)}
+.game h3{margin:0;font-size:19px;color:var(--navy)}
+.game p{margin:0;color:var(--gray);font-size:15px}
+.game .meta{font-size:13px;color:var(--ink);background:var(--panel);border-radius:8px;padding:6px 10px;margin-top:4px}
+.game .go{margin-top:auto;padding-top:8px}
+.caveat{background:#FDF1DC;border:1px solid #F0D9A8;border-radius:12px;padding:14px 18px;margin-top:20px;font-size:15px}
+.caveat ul{margin:6px 0 0;padding-left:20px}
+pre{background:#fff;border:1px solid var(--line);border-radius:10px;padding:14px;overflow:auto;font-size:13px;line-height:1.45;margin:0}
+.copy{margin-top:8px;font:inherit;font-size:14px;padding:6px 12px;border-radius:8px;border:1px solid var(--teal);background:#fff;color:var(--teal);cursor:pointer}
+footer{padding:28px 0 50px;color:var(--gray);font-size:14px}
+footer p{margin:4px 0}
+.sr{position:absolute;left:-9999px}
+
+.h3{font-size:21px;color:var(--navy);margin:30px 0 6px}
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:820px){.metrics{grid-template-columns:repeat(2,1fr)}}
+.metric{background:var(--panel);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:4px}
+.metric img{width:52px;height:52px;margin-bottom:6px}
+.metric b{color:var(--navy)} .metric span{font-size:15px;color:var(--gray)}
+.refs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media(max-width:820px){.refs{grid-template-columns:repeat(2,1fr)}}
+.ref{background:#fff;border:1px solid var(--line);border-radius:12px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:500;font-size:15px;text-align:center}
+.ref img{width:64px;height:64px}
+.viz{margin-top:18px;position:relative}
+.ct{margin:0;font-size:19px;color:var(--navy)}
+.ct .tag{font-size:13px;font-weight:700;color:#fff;background:var(--navy);border-radius:6px;padding:2px 7px;margin-right:4px;vertical-align:2px}
+.cs{margin:4px 0 10px;font-size:14.5px;color:var(--gray)}
+.chart{position:relative;width:100%}
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:inherit}
+.gstack{display:flex;flex-direction:column;gap:0}
+.series{transition:opacity .15s}
+.hl .series{opacity:.13}.hl .series.on{opacity:1}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:6px 0 2px;position:sticky;top:0;z-index:5;background:var(--bg);padding:8px 0}
+.chip{font:inherit;font-size:14px;font-weight:500;border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer;color:var(--ink);display:inline-flex;align-items:center;gap:8px}
+.chip i{display:inline-block;width:16px;height:3px;border-radius:2px;background:var(--c)}
+.chip[aria-pressed=true]{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+table.fit td{cursor:default;transition:opacity .15s}
+table.fit.hl td[data-v]{opacity:.35}
+table.fit.hl td.on{opacity:1}
+table.fit td.on .cell{box-shadow:inset 0 0 0 2px var(--ink)}
+table.fit th.on{color:var(--ink);font-weight:700}
+#bars .bar-row{cursor:default;border-radius:8px;padding:2px 0;transition:opacity .15s}
+#bars.hl .bar-row{opacity:.3} #bars.hl .bar-row.on{opacity:1}
+.tip{position:fixed;z-index:50;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 6px 20px rgba(11,37,69,.14);border-radius:10px;padding:9px 11px;font-size:13.5px;line-height:1.4;max-width:270px;opacity:0;transition:opacity .1s}
+.tip.show{opacity:1}
+.tip .tt{font-weight:700;color:var(--navy);margin-bottom:3px}
+.tip .row{display:flex;align-items:center;gap:7px;white-space:nowrap}
+.tip .key{display:inline-block;width:12px;height:3px;border-radius:2px}
+.tip strong{font-weight:700}
+.tip .mut{color:var(--gray)}
+details.dt{margin-top:6px;font-size:13.5px}
+details.dt summary{cursor:pointer;color:var(--teal);font-weight:500}
+.dtw{overflow-x:auto}
+.dtw table{border-collapse:collapse;margin-top:8px;font-size:13px;min-width:520px}
+.dtw th,.dtw td{border-bottom:1px solid var(--line);padding:4px 8px;text-align:right}
+.dtw th:first-child,.dtw td:first-child{text-align:left}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+  <p class="kicker">AIIDE 2026 · 22nd AAAI Conference on AI and Interactive Digital Entertainment</p>
+  <h1>Generating Board Games with MCTS and LLM Agents</h1>
+  <p class="authors">Gabriel Bauer de Oliveira · Anderson Rocha Tavares</p>
+  <p class="affil">Instituto de Informática, Universidade Federal do Rio Grande do Sul (UFRGS), Porto Alegre, Brazil</p>
+  <div class="buttons">
+    <a class="btn primary" href="paper.pdf">Paper (PDF)</a>
+    <a class="btn" href="poster.pdf">Poster (PDF)</a>
+    <a class="btn" href="#play">Play the games</a>
+  </div>
+  <p class="note-small">Poster and Case Study Demo Session · Thu Nov 12, 5:30 PM · Belo Horizonte</p>
+</div></header>
+
+<main>
+<section id="idea"><div class="wrap">
+  <p class="lead">From a plain-text game idea to a playable, tested board game.</p>
+  <p class="sub">LLM agents write and revise the game as Python code, MCTS agents play it, and the results of play decide what to change next. This is evolutionary game design, now with LLMs.</p>
+  <div class="steps" aria-label="Pipeline summary">
+    <span class="pill"><b>INPUT</b>a game idea in plain text</span><span class="arrow">→</span>
+    <span class="pill"><b>LOOP</b>generate → test → critique</span><span class="arrow">→</span>
+    <span class="pill"><b>OUTPUT</b>the best playable game found, in Python</span>
+  </div>
+  <figure>
+    <img src="img/pipeline.svg" alt="Pipeline diagram: a plain-text game idea goes to a generator made of rule formatter, planner and coder with validators, producing game.py; a tester runs MCTS self-play and measures completion, balance, agency and coverage; a critic LLM suggests rule changes that return to the generator.">
+    <figcaption>The pipeline. Solid boxes are LLM agents, dashed boxes are deterministic checks. The loop stops after 2 rejected versions in a row or 10 cycles.</figcaption>
+  </figure>
+</div></section>
+
+<section id="how"><div class="wrap">
+  <h2>How a game is measured</h2>
+  <p class="sub">Two identical MCTS (UCT) agents play 40 games of each new candidate. Four metrics, each from 0 to 1, summarise the games; <b>fitness</b> is their harmonic mean, so one broken metric pulls the whole score down.</p>
+  <div class="metrics">
+    <div class="metric"><img src="img/icons/completion.png" alt=""><b>Completion</b><span>Share of games that end with a winner.</span></div>
+    <div class="metric"><img src="img/icons/balance.png" alt=""><b>Balance</b><span>How evenly the two players win.</span></div>
+    <div class="metric"><img src="img/icons/agency.png" alt=""><b>Agency</b><span>How often a player has a real choice.</span></div>
+    <div class="metric"><img src="img/icons/coverage.png" alt=""><b>Coverage</b><span>How much of the board gets used.</span></div>
+  </div>
+  <h3 class="h3">Reference games</h3>
+  <p class="sub">The critic compares each candidate's metrics with four classic games and targets the metric that deviates most. A new version replaces the best one only if it is clearly better and does not lose on both completion and balance.</p>
+  <div class="refs">
+    <div class="ref"><img src="img/icons/checkers.png" alt=""><span>Checkers</span></div>
+    <div class="ref"><img src="img/icons/othello.png" alt=""><span>Othello</span></div>
+    <div class="ref"><img src="img/icons/connect-four.png" alt=""><span>Connect Four</span></div>
+    <div class="ref"><img src="img/icons/nine-mens-morris.png" alt=""><span>Nine Men's Morris</span></div>
+  </div>
+</div></section>
+
+<section id="results"><div class="wrap">
+  <h2>Results</h2>
+  <p class="sub">4 LLMs × 4 games = 16 runs, one run per pair. The four games were written for this study, and each prompt has its own level of detail (C1 minimal to C4 complete). Hover or tap the charts for details.</p>
+
+  <article class="card viz">
+    <h3 class="ct">Feedback makes games better, on average</h3>
+    <p class="cs">Fitness of the best game so far, per generation (0 = first draft). Line: mean of the 16 runs; band: interquartile range.</p>
+    <div class="chart" data-chart="mean" role="img" aria-label="Mean best-so-far fitness of 16 runs rises from 0.26 at the first draft to 0.56 by generation 3, with an interquartile band"></div>
+  </article>
+
+  <div class="msgs">
+    <div class="msg"><b>The loop works.</b>12 of 16 runs ended above their first draft; mean fitness went from 0.26 to 0.56.</div>
+    <div class="msg"><b>The game matters.</b>All four models reached balanced games on C4 (0.85); none did on C3 (0.07).</div>
+    <div class="msg"><b>Models differ.</b>Claude-Sonnet-5 and Qwen3.6-Plus reached the highest mean fitness; GPT-5 and DeepSeek-V4-Pro varied more across games.</div>
+  </div>
+
+  <article class="card viz">
+    <h3 class="ct">Final fitness by model and game</h3>
+    <p class="cs">Fitness of the best game each run produced.</p>
+    <div class="tw"><table class="fit" id="fit">
+      <thead><tr><th></th><th data-c="0">DeepSeek<br>V4-Pro</th><th data-c="1">Claude<br>Sonnet-5</th><th data-c="2">GPT-5</th><th data-c="3">Qwen3.6<br>Plus</th><th data-c="4">Mean</th></tr></thead>
+      <tbody>
+<tr><th scope="row"><b>C1</b> Connection</th><td data-c="0" data-g="C1" data-m="DeepSeek-V4-Pro" data-v="0.819" tabindex="0"><span class="cell" style="background:#67b7a6">0.819</span></td><td data-c="1" data-g="C1" data-m="Claude-Sonnet-5" data-v="0.784" tabindex="0"><span class="cell" style="background:#7bc3b3">0.784</span></td><td data-c="2" data-g="C1" data-m="GPT-5" data-v="0.299" tabindex="0"><span class="cell" style="background:#f6e0a0">0.299</span></td><td data-c="3" data-g="C1" data-m="Qwen3.6-Plus" data-v="0.817" tabindex="0"><span class="cell" style="background:#68b7a6">0.817</span></td><td data-c="4" data-g="C1" data-m="Mean" data-v="0.680" tabindex="0"><span class="cell" style="background:#b1ded3">0.680</span></td></tr>
+<tr><th scope="row"><b>C2</b> Capture</th><td data-c="0" data-g="C2" data-m="DeepSeek-V4-Pro" data-v="0.010" tabindex="0"><span class="cell" style="background:#f2c4b0">0.010</span></td><td data-c="1" data-g="C2" data-m="Claude-Sonnet-5" data-v="0.858" tabindex="0"><span class="cell" style="background:#50a997">0.858</span></td><td data-c="2" data-g="C2" data-m="GPT-5" data-v="0.700" tabindex="0"><span class="cell" style="background:#a8dacd">0.700</span></td><td data-c="3" data-g="C2" data-m="Qwen3.6-Plus" data-v="0.982" tabindex="0"><span class="cell" style="background:#409a89">0.982</span></td><td data-c="4" data-g="C2" data-m="Mean" data-v="0.637" tabindex="0"><span class="cell" style="background:#c7e7de">0.637</span></td></tr>
+<tr><th scope="row"><b>C3</b> Pursuit</th><td data-c="0" data-g="C3" data-m="DeepSeek-V4-Pro" data-v="0.038" tabindex="0"><span class="cell" style="background:#f2c4b0">0.038</span></td><td data-c="1" data-g="C3" data-m="Claude-Sonnet-5" data-v="0.165" tabindex="0"><span class="cell" style="background:#f2c4b0">0.165</span></td><td data-c="2" data-g="C3" data-m="GPT-5" data-v="0.038" tabindex="0"><span class="cell" style="background:#f2c4b0">0.038</span></td><td data-c="3" data-g="C3" data-m="Qwen3.6-Plus" data-v="0.038" tabindex="0"><span class="cell" style="background:#f2c4b0">0.038</span></td><td data-c="4" data-g="C3" data-m="Mean" data-v="0.070" tabindex="0"><span class="cell" style="background:#f2c4b0">0.070</span></td></tr>
+<tr><th scope="row"><b>C4</b> Promotion</th><td data-c="0" data-g="C4" data-m="DeepSeek-V4-Pro" data-v="0.854" tabindex="0"><span class="cell" style="background:#52aa98">0.854</span></td><td data-c="1" data-g="C4" data-m="Claude-Sonnet-5" data-v="0.809" tabindex="0"><span class="cell" style="background:#6dbaa9">0.809</span></td><td data-c="2" data-g="C4" data-m="GPT-5" data-v="0.868" tabindex="0"><span class="cell" style="background:#4ea795">0.868</span></td><td data-c="3" data-g="C4" data-m="Qwen3.6-Plus" data-v="0.870" tabindex="0"><span class="cell" style="background:#4ea795">0.870</span></td><td data-c="4" data-g="C4" data-m="Mean" data-v="0.850" tabindex="0"><span class="cell" style="background:#55ac9a">0.850</span></td></tr>
+<tr><th scope="row"><b>Mean</b></th><td data-c="0" data-g="Mean" data-m="DeepSeek-V4-Pro" data-v="0.430" tabindex="0"><span class="cell" style="background:#f6e0a0">0.430</span></td><td data-c="1" data-g="Mean" data-m="Claude-Sonnet-5" data-v="0.654" tabindex="0"><span class="cell" style="background:#bee4da">0.654</span></td><td data-c="2" data-g="Mean" data-m="GPT-5" data-v="0.477" tabindex="0"><span class="cell" style="background:#f6e0a0">0.477</span></td><td data-c="3" data-g="Mean" data-m="Qwen3.6-Plus" data-v="0.677" tabindex="0"><span class="cell" style="background:#b3dfd4">0.677</span></td><td></td></tr>
+      </tbody>
+    </table></div>
+  </article>
+
+  <article class="card viz">
+    <h3 class="ct">First draft vs. best game, per model</h3>
+    <p class="cs">Mean fitness over the four games.</p>
+    <div id="bars">
+<div class="bar-row" tabindex="0" data-m="Qwen3.6-Plus" data-f0="0.110" data-f1="0.677"><span class="bar-name">Qwen3.6-Plus</span><div class="bar-tracks"><div class="bar draft" style="width:11.0%"><i>0.110</i></div><div class="bar best" style="width:67.7%"><i>0.677</i></div></div></div>
+<div class="bar-row" tabindex="0" data-m="Claude-Sonnet-5" data-f0="0.489" data-f1="0.654"><span class="bar-name">Claude-Sonnet-5</span><div class="bar-tracks"><div class="bar draft" style="width:48.9%"><i>0.489</i></div><div class="bar best" style="width:65.4%"><i>0.654</i></div></div></div>
+<div class="bar-row" tabindex="0" data-m="GPT-5" data-f0="0.160" data-f1="0.477"><span class="bar-name">GPT-5</span><div class="bar-tracks"><div class="bar draft" style="width:16.0%"><i>0.160</i></div><div class="bar best" style="width:47.7%"><i>0.477</i></div></div></div>
+<div class="bar-row" tabindex="0" data-m="DeepSeek-V4-Pro" data-f0="0.290" data-f1="0.430"><span class="bar-name">DeepSeek-V4-Pro</span><div class="bar-tracks"><div class="bar draft" style="width:29.0%"><i>0.290</i></div><div class="bar best" style="width:43.0%"><i>0.430</i></div></div></div>
+    </div>
+    <div class="legend"><span style="--c:#B9C7D4">first draft</span><span style="--c:var(--teal)">best after the loop</span></div>
+  </article>
+
+  <h3 class="h3" id="games">Game by game</h3>
+  <p class="sub">Solid line: best game so far. Dotted line: an attempted change. Dot: kept. ×: rejected. Hover a model below to follow it across the four games.</p>
+  <div class="chips" id="chips"></div>
+  <div class="gstack">
+    <article class="card viz game-viz"><h3 class="ct"><span class="tag">C1</span> Connection game</h3><p class="cs">Minimal prompt: a path-connection game with limited bridge tiles.</p>
+      <div class="chart" data-chart="game" data-g="C1" role="img" aria-label="Fitness per generation for C1, one line per model"></div>
+      <details class="dt"><summary>Data</summary><div class="dtw" data-table="C1"></div></details></article>
+    <article class="card viz game-viz"><h3 class="ct"><span class="tag">C2</span> Capture game</h3><p class="cs">A 6×6 game where surrounded pieces are captured and the player with more pieces wins.</p>
+      <div class="chart" data-chart="game" data-g="C2" role="img" aria-label="Fitness per generation for C2, one line per model"></div>
+      <details class="dt"><summary>Data</summary><div class="dtw" data-table="C2"></div></details></article>
+    <article class="card viz game-viz"><h3 class="ct"><span class="tag">C3</span> Pursuit game</h3><p class="cs">An asymmetric 5×5 game: a King tries to reach a corner, four Guards try to immobilise it.</p>
+      <div class="chart" data-chart="game" data-g="C3" role="img" aria-label="Fitness per generation for C3, one line per model"></div>
+      <details class="dt"><summary>Data</summary><div class="dtw" data-table="C3"></div></details></article>
+    <article class="card viz game-viz"><h3 class="ct"><span class="tag">C4</span> Promotion game</h3><p class="cs">A 6×6 game with forward moves, diagonal jump captures, promotion, and one mechanic the model invents.</p>
+      <div class="chart" data-chart="game" data-g="C4" role="img" aria-label="Fitness per generation for C4, one line per model"></div>
+      <details class="dt"><summary>Data</summary><div class="dtw" data-table="C4"></div></details></article>
+  </div>
+</div></section>
+
+<section id="play"><div class="wrap">
+  <h2>Play the generated games</h2>
+  <p class="sub">The best game each pipeline run produced, playable against an MCTS (UCT) agent in your browser. Nothing is sent to a server.</p>
+  <div class="games">
+    <article class="game"><span class="tag">C1</span><h3>Connection game with bridge tiles</h3><p>Build a continuous path between opposite sides of the board, using a limited number of bridge tiles to cross the opponent's paths.</p>
+      <div class="meta">Best game: DeepSeek-V4-Pro · fitness 0.819</div>
+      <div class="go"><a class="btn" aria-disabled="true" href="play/c1/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+    <article class="game"><span class="tag">C2</span><h3>Capture by surrounding (6×6)</h3><p>Surround opponent pieces on all sides to capture them. The game ends when the board is full or no moves remain, and the player with more pieces wins.</p>
+      <div class="meta">Best game: Qwen3.6-Plus · fitness 0.982</div>
+      <div class="go"><a class="btn" aria-disabled="true" href="play/c2/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+    <article class="game"><span class="tag">C3</span><h3>Asymmetric pursuit: King vs 4 Guards</h3><p>The King starts in the centre of a 5×5 board and wins by reaching a corner. Four Guards win by immobilising the King. Pieces slide until they hit an obstacle.</p>
+      <div class="meta">Best game: Claude-Sonnet-5 · fitness 0.165</div>
+      <div class="go"><a class="btn" aria-disabled="true" href="play/c3/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+    <article class="game"><span class="tag">C4</span><h3>Promotion game with an invented mechanic</h3><p>Basic pieces step forward and capture by jumping diagonally; reaching the far row promotes them. The model had to invent one extra mechanic.</p>
+      <div class="meta">Best game: Qwen3.6-Plus · fitness 0.870</div>
+      <div class="go"><a class="btn" aria-disabled="true" href="play/c4/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+
+  </div>
+  <div class="caveat"><b>Before you play</b>
+    <ul>
+      <li>These are research prototypes written by LLMs. Rules may be unbalanced, odd or buggy; that is part of what the paper studies.</li>
+      <li>The agent runs in your browser, so it is weaker than the one used in the experiments.</li>
+      <li>In the C2 game by Qwen3.6-Plus, a match that reaches the 60-turn cap is decided by piece count.</li>
+    </ul>
+  </div>
+</div></section>
+
+<section id="limits"><div class="wrap">
+  <h2>What this does and does not show</h2>
+  <div class="cols">
+    <div class="card"><b>Shows</b><p style="margin:6px 0 0">Feedback from simulated play improves LLM-written games on average, and the benefit depends on the game. The generator–tester–critic structure is a workable way to do it.</p></div>
+    <div class="card"><b>Does not show</b><p style="margin:6px 0 0">Each game came with its own level of detail, so game and prompt detail are confounded. One run per model–game pair, no ablation of the loop or its agents yet, MCTS may be a weak tester and the metrics are proxies, and there was no human playtesting. Next: the same game at several detail levels, repeated runs, ablations and playtests.</p></div>
+  </div>
+</div></section>
+
+<section id="cite"><div class="wrap">
+  <h2>Cite</h2>
+<pre id="bib">@inproceedings{oliveira2026generating,
+  title     = {Generating Board Games with {MCTS} and {LLM} Agents},
+  author    = {Bauer de Oliveira, Gabriel and Tavares, Anderson Rocha},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence
+               and Interactive Digital Entertainment (AIIDE)},
+  year      = {2026}
+}</pre>
+  <button class="copy" type="button" onclick="copyBib(this)">Copy BibTeX</button>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <p><b>Contact:</b> <a href="mailto:gbboliveira@inf.ufrgs.br">gbboliveira@inf.ufrgs.br</a> · <a href="mailto:artavares@inf.ufrgs.br">artavares@inf.ufrgs.br</a></p>
+  <p><b>Acknowledgments.</b> FAPERGS (scholarship, first author), Kunumi Institute and CAPES (Finance Code 001).</p>
+  <p>Paper: Copyright © 2026, Association for the Advancement of Artificial Intelligence (www.aaai.org). All rights reserved.</p>
+</div></footer>
+<script>
+function copyBib(b){var t=document.getElementById('bib').innerText;
+  (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(function(){b.textContent='Copied'},function(){var r=document.createRange();r.selectNodeContents(document.getElementById('bib'));var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='Selected: press Ctrl/Cmd+C'});}
+</script>
+<script src="js/data.js"></script>
+<script src="js/results.js"></script>
+</body>
+</html>
