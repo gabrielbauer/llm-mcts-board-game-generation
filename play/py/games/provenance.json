@@ -1,0 +1,58 @@
+{
+  "c1": {
+    "class": "Bridge",
+    "prompt_id": "C1",
+    "model": "deepseek/deepseek-v4-pro",
+    "run": "experiment_20260703_124545",
+    "fitness": 0.8192,
+    "metrics": {
+      "completion": 0.75,
+      "balance": 0.866667,
+      "agency": 0.978678,
+      "coverage": 0.727778
+    },
+    "prompt": "Invent an abstract 2-player game where the objective is to build a continuous path connecting opposite sides of the board while using a limited number of bridge tiles to cross opponent paths."
+  },
+  "c2": {
+    "class": "OrthoSurround6",
+    "prompt_id": "C2",
+    "model": "qwen/qwen3.6-plus",
+    "run": "experiment_20260703_175521",
+    "fitness": 0.9815,
+    "metrics": {
+      "completion": 1.0,
+      "balance": 0.95,
+      "agency": 1.0,
+      "coverage": 0.977778
+    },
+    "prompt": "Invent an abstract 2-player board game played on a 6x6 square grid. Each player has an infinite supply of pieces. The objective is to completely surround opponent pieces on all orthogonal sides to capture and remove them from the board. The game ends when the board is completely full or no valid moves remain, and the player with the most pieces remaining on the board wins."
+  },
+  "c3": {
+    "class": "GuardTheKing",
+    "prompt_id": "C3",
+    "model": "anthropic/claude-sonnet-5",
+    "run": "experiment_20260703_174328",
+    "fitness": 0.1651,
+    "metrics": {
+      "completion": 1.0,
+      "balance": 0.05,
+      "agency": 0.997155,
+      "coverage": 0.45
+    },
+    "prompt": "Invent an asymmetric abstract 2-player board game played on a 5x5 grid. Player 1 controls a single 'King' piece starting in the center square, and wins if the King reaches any corner square. Player 2 controls 4 'Guard' pieces starting on the edge squares, and wins if they completely immobilize the King. Players take turns moving one piece per turn. Pieces move by sliding orthogonally any number of empty squares until they hit an obstacle (another piece or the board edge). Pieces cannot jump over other pieces."
+  },
+  "c4": {
+    "class": "AscensionCheckers",
+    "prompt_id": "C4",
+    "model": "qwen/qwen3.6-plus",
+    "run": "experiment_20260703_202943",
+    "fitness": 0.8704,
+    "metrics": {
+      "completion": 0.8,
+      "balance": 1.0,
+      "agency": 0.801262,
+      "coverage": 0.911111
+    },
+    "prompt": "Invent an abstract 2-player board game played on a 6x6 grid. Each player starts with 6 'Basic' pieces placed on their closest row. Players take turns moving one piece. Basic pieces move exactly one square straight forward into an empty space. Basic pieces capture by jumping diagonally over an opponent into an empty space immediately behind it. You must strictly implement this rule: If a Basic piece reaches the opponent's starting row, it promotes to an 'Ascended' piece, gaining the ability to move and jump both orthogonally and diagonally. If a player loses all pieces, they lose the game. You must implement these rules exactly, but you are required to invent and add one supplementary secondary mechanic (e.g., a special terrain square or a bonus action) to increase strategic depth."
+  }
+}

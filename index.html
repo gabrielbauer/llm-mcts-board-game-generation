@@ -300,20 +300,20 @@ details.dt summary{cursor:pointer;color:var(--acc);font-weight:600}
 
 <section id="play"><div class="wrap">
   <h2>Play the generated games</h2>
-  <p class="sub">The best game each pipeline run produced, playable against an MCTS (UCT) agent in your browser. Nothing is sent to a server.</p>
+  <p class="sub">The best game produced for each prompt, playable against the same MCTS (UCT) agent used to evaluate it. Python runs in your browser; nothing is sent to a server.</p>
   <div class="games">
     <article class="game"><span class="tag">C1</span><h3>Connection game with bridge tiles</h3><p>Build a continuous path between opposite sides of the board, using a limited number of bridge tiles to cross the opponent's paths.</p>
       <div class="meta">Best game: DeepSeek-V4-Pro · fitness 0.819</div>
-      <div class="go"><a class="btn" aria-disabled="true" href="play/c1/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+      <div class="go"><a class="btn primary" href="play/#c1">Play against UCT</a></div></article>
     <article class="game"><span class="tag">C2</span><h3>Capture by surrounding (6×6)</h3><p>Surround opponent pieces on all sides to capture them. The game ends when the board is full or no moves remain, and the player with more pieces wins.</p>
       <div class="meta">Best game: Qwen3.6-Plus · fitness 0.982</div>
-      <div class="go"><a class="btn" aria-disabled="true" href="play/c2/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+      <div class="go"><a class="btn primary" href="play/#c2">Play against UCT</a></div></article>
     <article class="game"><span class="tag">C3</span><h3>Asymmetric pursuit: King vs 4 Guards</h3><p>The King starts in the centre of a 5×5 board and wins by reaching a corner. Four Guards win by immobilising the King. Pieces slide until they hit an obstacle.</p>
       <div class="meta">Best game: Claude-Sonnet-5 · fitness 0.165</div>
-      <div class="go"><a class="btn" aria-disabled="true" href="play/c3/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+      <div class="go"><a class="btn primary" href="play/#c3">Play against UCT</a></div></article>
     <article class="game"><span class="tag">C4</span><h3>Promotion game with an invented mechanic</h3><p>Basic pieces step forward and capture by jumping diagonally; reaching the far row promotes them. The model had to invent one extra mechanic.</p>
       <div class="meta">Best game: Qwen3.6-Plus · fitness 0.870</div>
-      <div class="go"><a class="btn" aria-disabled="true" href="play/c4/" title="Playable demo coming soon">Playable demo: coming soon</a></div></article>
+      <div class="go"><a class="btn primary" href="play/#c4">Play against UCT</a></div></article>
 
   </div>
   <div class="caveat"><b>Before you play</b>
