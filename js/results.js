@@ -3,7 +3,7 @@
 var D=window.RESULTS, NS='http://www.w3.org/2000/svg';
 var MODELS=['DeepSeek-V4-Pro','Claude-Sonnet-5','GPT-5','Qwen3.6-Plus'];
 var COL={'DeepSeek-V4-Pro':'#2a78d6','Claude-Sonnet-5':'#eb6834','GPT-5':'#1baf7a','Qwen3.6-Plus':'#eda100'};
-var INK='#14202E',GRAY='#4A5B6D',LINE='#D5E0EB',NAVY='#0B2545',TEAL='#0B7A75';
+var INK='#1C1C1C',GRAY='#474747',MUTED='#6E6E6E',LINE='#DCD7CE',ACC='#A3262A',BAND='#DED3C7',DRAFT='#D3CDC2';
 function el(tag,attrs,parent){var e=document.createElementNS(NS,tag);for(var k in attrs)e.setAttribute(k,attrs[k]);if(parent)parent.appendChild(e);return e}
 function txt(parent,x,y,s,attrs){var t=el('text',Object.assign({x:x,y:y,fill:GRAY,'font-size':12.5},attrs||{}),parent);t.textContent=s;return t}
 function f3(v){return v==null?'—':v.toFixed(3)} function f2(v){return v==null?'undefined':v.toFixed(2)}
@@ -28,29 +28,29 @@ function frame(host,opt){
   var g=el('g',{},svg);
   [0,0.25,0.5,0.75,1].forEach(function(v){el('line',{x1:m.l,x2:W-m.r,y1:Y(v),y2:Y(v),stroke:LINE,'stroke-width':v===0?1.2:0.8},g);
     txt(g,m.l-8,Y(v)+4,v===0?'0':v===1?'1':String(v),{'text-anchor':'end'})});
-  for(var i=opt.x0;i<=opt.x1;i++)txt(g,X(i),H-m.b+18,String(i),{'text-anchor':'middle'});
+  for(var i=opt.x0;i<=opt.x1;i++)txt(g,X(i),H-m.b+18,String(i+1),{'text-anchor':'middle'});
   txt(g,m.l+iw/2,H-6,opt.xl,{'text-anchor':'middle','font-size':12.5});
   var yl=txt(g,0,0,'Fitness',{'text-anchor':'middle',transform:'translate(13 '+(m.t+ih/2)+') rotate(-90)'});
   return {svg:svg,X:X,Y:Y,W:W,H:H,m:m,iw:iw,ih:ih}
 }
 // ---------- mean chart (crosshair)
 function meanChart(host){
-  var G=D.mean.length-1,F=frame(host,{x0:0,x1:G,xl:'Generation (0 = first draft)'}),X=F.X,Y=F.Y,svg=F.svg;
+  var G=D.mean.length-1,F=frame(host,{x0:0,x1:G,xl:'Iteration (1 = first draft)'}),X=F.X,Y=F.Y,svg=F.svg;
   var up=D.q.map(function(q,i){return X(i)+','+Y(q[2])}).join(' '),dn=D.q.map(function(q,i){return X(i)+','+Y(q[0])}).reverse().join(' ');
-  el('polygon',{points:up+' '+dn,fill:'#0B7A75','fill-opacity':0.13},svg);
-  el('polyline',{points:D.mean.map(function(v,i){return X(i)+','+Y(v)}).join(' '),fill:'none',stroke:NAVY,'stroke-width':2.5,'stroke-linejoin':'round'},svg);
-  D.mean.forEach(function(v,i){el('circle',{cx:X(i),cy:Y(v),r:4.5,fill:NAVY,stroke:'#fff','stroke-width':2},svg)});
-  txt(svg,X(G)-4,Y(D.q[G][2])-8,'interquartile range',{'text-anchor':'end',fill:TEAL});
-  txt(svg,X(1.15),Y(D.mean[1])+24,'mean of 16 runs',{fill:NAVY,'font-weight':600});
+  el('polygon',{points:up+' '+dn,fill:BAND,'fill-opacity':0.75},svg);
+  el('polyline',{points:D.mean.map(function(v,i){return X(i)+','+Y(v)}).join(' '),fill:'none',stroke:ACC,'stroke-width':2.5,'stroke-linejoin':'round'},svg);
+  D.mean.forEach(function(v,i){el('circle',{cx:X(i),cy:Y(v),r:4.5,fill:ACC,stroke:'#fff','stroke-width':2},svg)});
+  txt(svg,X(G)-4,Y(D.q[G][2])-8,'middle half of runs',{'text-anchor':'end',fill:MUTED});
+  txt(svg,X(1.15),Y(D.mean[1])+24,'mean of 16 runs',{fill:ACC,'font-weight':600});
   var cross=el('line',{y1:F.m.t,y2:F.H-F.m.b,stroke:INK,'stroke-width':1,'stroke-dasharray':'3 3',opacity:0},svg);
-  var dot=el('circle',{r:7,fill:'none',stroke:NAVY,'stroke-width':2,opacity:0},svg);
+  var dot=el('circle',{r:7,fill:'none',stroke:ACC,'stroke-width':2,opacity:0},svg);
   var hit=el('rect',{x:F.m.l-10,y:F.m.t,width:F.iw+20,height:F.ih,fill:'transparent'},svg);
   function move(e){var p=ptr(e),r=svg.getBoundingClientRect(),sx=(p.x-r.left)*F.W/r.width;
     var i=Math.round((sx-F.m.l)/F.iw*G);i=Math.max(0,Math.min(G,i));
     cross.setAttribute('x1',X(i));cross.setAttribute('x2',X(i));cross.setAttribute('opacity',1);
     dot.setAttribute('cx',X(i));dot.setAttribute('cy',Y(D.mean[i]));dot.setAttribute('opacity',1);
-    var q=D.q[i];showTip(p.x,p.y,function(t){line(t,'tt',i===0?'Generation 0 (first draft)':'Generation '+i);
-      keyRow(t,NAVY,'mean',f3(D.mean[i]));keyRow(t,null,'median',f3(q[1]));keyRow(t,null,'middle half of runs',f3(q[0])+'–'+f3(q[2]))})}
+    var q=D.q[i];showTip(p.x,p.y,function(t){line(t,'tt',i===0?'Iteration 1 (first draft)':'Iteration '+(i+1));
+      keyRow(t,ACC,'mean',f3(D.mean[i]));keyRow(t,null,'median',f3(q[1]));keyRow(t,null,'middle half of runs',f3(q[0])+'–'+f3(q[2]))})}
   function out(){cross.setAttribute('opacity',0);dot.setAttribute('opacity',0);hideTip()}
   hit.addEventListener('pointermove',move);hit.addEventListener('pointerdown',move);hit.addEventListener('pointerleave',out);
 }
@@ -63,7 +63,7 @@ function applyHL(){var m=hover||pinned;
 function gameChart(host){
   var gid=host.getAttribute('data-g'),runs=D.runs.filter(function(r){return r.g===gid});
   var N=Math.max.apply(null,runs.map(function(r){return r.c.length}));
-  var F=frame(host,{x0:0,x1:N-1,xl:'Generation (0 = first draft)'}),X=F.X,Y=F.Y,svg=F.svg;
+  var F=frame(host,{x0:0,x1:N-1,xl:'Iteration (1 = first draft)'}),X=F.X,Y=F.Y,svg=F.svg;
   MODELS.forEach(function(mn){var r=runs.filter(function(x){return x.m===mn})[0];if(!r)return;var c=COL[mn];
     var g=el('g',{'class':'series','data-m':mn},svg);
     var inc=r.c[0][1],path='M'+X(0)+' '+Y(inc),prev=inc;
@@ -79,7 +79,7 @@ function gameChart(host){
       var h=el('circle',{cx:x,cy:y,r:12,fill:'transparent',tabindex:0},g);
       function on(e){hover=mn;applyHL();var pp=e&&e.clientX!=null?ptr(e):(function(){var b=h.getBoundingClientRect();return{x:b.right,y:b.top}})();
         showTip(pp.x,pp.y,function(t){line(t,'tt',mn+' · '+gid);
-          keyRow(t,c,k===0?'first draft (generation 0)':'generation '+k,f3(p[1]),k===0?'':(p[2]?' · kept':' · rejected'));
+          keyRow(t,c,k===0?'first draft (iteration 1)':'iteration '+(k+1),f3(p[1]),k===0?'':(p[2]?' · kept':' · rejected'));
           line(t,'row mut','Completion '+f2(p[3])+' · Balance '+f2(p[4]));line(t,'row mut','Agency '+f2(p[5])+' · Coverage '+f2(p[6]))})}
       function off(){hover=null;applyHL();hideTip()}
       h.addEventListener('pointerenter',on);h.addEventListener('pointerdown',on);h.addEventListener('pointerleave',off);h.addEventListener('focus',on);h.addEventListener('blur',off)});
@@ -88,9 +88,9 @@ function gameChart(host){
   applyHL();
 }
 function dataTable(host){var gid=host.getAttribute('data-table');var t=document.createElement('table');
-  var hd=t.createTHead().insertRow();['Model','Gen.','Fitness','Kept','Compl.','Balance','Agency','Coverage'].forEach(function(s){var th=document.createElement('th');th.textContent=s;hd.appendChild(th)});
+  var hd=t.createTHead().insertRow();['Model','Iter.','Fitness','Kept','Compl.','Balance','Agency','Coverage'].forEach(function(s){var th=document.createElement('th');th.textContent=s;hd.appendChild(th)});
   var b=t.createTBody();D.runs.filter(function(r){return r.g===gid}).forEach(function(r){r.c.forEach(function(p,k){var tr=b.insertRow();
-    [r.m,String(k),f3(p[1]),k===0?'first draft':(p[2]?'yes':'no'),f2(p[3]),f2(p[4]),f2(p[5]),f2(p[6])].forEach(function(s){tr.insertCell().textContent=s})})});
+    [r.m,String(k+1),f3(p[1]),k===0?'first draft':(p[2]?'yes':'no'),f2(p[3]),f2(p[4]),f2(p[5]),f2(p[6])].forEach(function(s){tr.insertCell().textContent=s})})});
   host.appendChild(t)}
 // ---------- chips
 function chips(){var box=document.getElementById('chips');if(!box)return;
@@ -118,7 +118,7 @@ function bars(){var b=document.getElementById('bars');if(!b)return;
     function on(e){b.classList.add('hl');b.querySelectorAll('.bar-row').forEach(function(x){x.classList.toggle('on',x===r)});
       var m=r.getAttribute('data-m'),f0=+r.getAttribute('data-f0'),f1=+r.getAttribute('data-f1');
       var pp=e&&e.clientX!=null?ptr(e):(function(){var q=r.getBoundingClientRect();return{x:q.right-40,y:q.top}})();
-      showTip(pp.x,pp.y,function(t){line(t,'tt',m);keyRow(t,'#B9C7D4','first draft',f3(f0));keyRow(t,TEAL,'best after the loop',f3(f1));line(t,'row mut','+'+(f1-f0).toFixed(3)+' (mean of 4 games)')})}
+      showTip(pp.x,pp.y,function(t){line(t,'tt',m);keyRow(t,DRAFT,'first draft',f3(f0));keyRow(t,INK,'best after the loop',f3(f1));line(t,'row mut','+'+(f1-f0).toFixed(3)+' (mean of 4 games)')})}
     function off(){b.classList.remove('hl');r.classList.remove('on');hideTip()}
     r.addEventListener('pointerenter',on);r.addEventListener('pointermove',on);r.addEventListener('pointerleave',off);r.addEventListener('focus',on);r.addEventListener('blur',off)})}
 // ---------- init + resize
